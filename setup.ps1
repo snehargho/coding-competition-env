@@ -339,6 +339,20 @@ if ($pythonExe) {
     if ($LASTEXITCODE -ne 0) {
         Write-Log 'pip is missing; running ensurepip...' 'WARN'
         & $pythonExe -m ensurepip --user *> $null
+        & $pythonExe -m pip --version *> $null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Log 'ensurepip did not help; falling back to get-pip.py...' 'WARN'
+            $getPip = Get-CachedAsset -FileName 'get-pip.py' -Url 'https://bootstrap.pypa.io/get-pip.py' -Sha256 ''
+            if ($getPip) {
+                & $pythonExe $getPip '--user' '--no-warn-script-location' *> $null
+            }
+        }
+    }
+    & $pythonExe -m pip --version *> $null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Log 'pip is ready.' 'PASS'
+    } else {
+        Write-Log 'pip could not be set up; library installs will fail.' 'FAIL'
     }
 } else {
     Write-Log 'Python is not available; libraries cannot be installed.' 'FAIL'
